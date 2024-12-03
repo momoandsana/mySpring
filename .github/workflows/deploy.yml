@@ -14,12 +14,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 2. Java 17 설치
+    # 2. Java 17 설치 (adoptopenjdk 대신 adoptium 사용)
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
-        distribution: 'adoptopenjdk'
+        distribution: 'adoptium'  # adoptopenjdk를 adoptium으로 변경
 
     # 3. Maven 빌드 (pom.xml 파일이 프로젝트 루트에 있음)
     - name: Build JAR with Maven
