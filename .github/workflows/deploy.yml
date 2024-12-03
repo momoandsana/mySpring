@@ -14,15 +14,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 2. Maven 빌드 (프로젝트 루트 기준으로 pom.xml 빌드)
+    # 2. Maven 빌드 (pom.xml 파일이 프로젝트 루트에 있음)
     - name: Build JAR with Maven
       run: |
-        mvn -f back_Security_JWT/pom.xml clean package -DskipTests
+        mvn clean package -DskipTests
 
-    # 3. Docker 이미지 빌드 (프로젝트 루트 기준으로 Dockerfile 빌드)
+    # 3. Docker 이미지 빌드
     - name: Build Docker Image
       run: |
-        docker build -t gil-project:latest -f back_Security_JWT/Dockerfile .
+        docker build -t gil-project:latest .
 
     # 4. Docker 이미지 저장 (.tar 파일로 내보내기)
     - name: Save Docker Image
