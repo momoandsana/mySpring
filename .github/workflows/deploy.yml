@@ -26,17 +26,22 @@ jobs:
       run: |
         mvn clean package -DskipTests
 
-    # 4. Docker 이미지 빌드
+    # 4. target 디렉토리 확인 (빌드된 JAR 파일이 있는지 확인)
+    - name: List target directory
+      run: |
+        ls -l target
+
+    # 5. Docker 이미지 빌드
     - name: Build Docker Image
       run: |
         docker build -t gil-project:latest .
 
-    # 5. Docker 이미지 저장 (.tar 파일로 내보내기)
+    # 6. Docker 이미지 저장 (.tar 파일로 내보내기)
     - name: Save Docker Image
       run: |
         docker save gil-project:latest -o gil-project.tar
 
-    # 6. EC2에 Docker 이미지 전송
+    # 7. EC2에 Docker 이미지 전송
     - name: Transfer Docker Image to EC2
       env:
         PEM_KEY: ${{ secrets.EC2_PEM_KEY }}
@@ -45,7 +50,7 @@ jobs:
       run: |
         scp -i <(echo "$PEM_KEY") -o StrictHostKeyChecking=no gil-project.tar ${USER}@${EC2_HOST}:/home/${USER}/gil-project.tar
 
-    # 7. EC2에서 Docker Compose 실행 및 기존 이미지 삭제
+    # 8. EC2에서 Docker Compose 실행 및 기존 이미지 삭제
     - name: Deploy on EC2
       env:
         PEM_KEY: ${{ secrets.EC2_PEM_KEY }}
@@ -62,11 +67,11 @@ jobs:
           docker images --filter=reference='gil-project*' --format "{{.ID}}" | xargs -r docker rmi -f || true
 
           # 새로운 Docker 이미지 로드
-          docker load -i gil-project.tar
+          docker load -i /home/${USER}/gil-project.tar
 
           # Docker Compose 실행
           docker-compose up -d
 
           # 불필요한 파일 삭제
-          rm -f gil-project.tar
+          rm -f /home/${USER}/gil-project.tar
         EOF
