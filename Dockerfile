@@ -5,10 +5,10 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # 3. JAR 파일 복사 (빌드 후 target 디렉토리 내 파일을 복사)
-COPY target/step03_Security_JWT-0.0.1-SNAPSHOT.jar /app/mySpring.jar
+COPY target/step03_Security_JWT-0.0.1-SNAPSHOT.jar /app/myspring.jar
 
 # 4. 포트 노출
 EXPOSE 9000
 
 # 5. 실행 명령어
-CMD ["java", "-jar", "/app/mySpring.jar"]
+CMD ["java", "-jar", "/app/myspring.jar"]
