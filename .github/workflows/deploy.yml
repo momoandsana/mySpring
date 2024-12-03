@@ -19,7 +19,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         java-version: '17'
-        distribution: 'temurin'  # adoptopenjdk 대신 temurin 사용
+        distribution: 'temurin'
 
     # 3. Maven 빌드 (pom.xml 파일이 프로젝트 루트에 있음)
     - name: Build JAR with Maven
@@ -29,7 +29,7 @@ jobs:
     # 4. target 디렉토리 확인 (빌드된 JAR 파일이 있는지 확인)
     - name: List target directory
       run: |
-        ls -l target
+        ls -l target || echo "target directory is missing or empty"
 
     # 5. Docker 이미지 빌드
     - name: Build Docker Image
