@@ -17,7 +17,7 @@ jobs:
     # 2. Docker 이미지 빌드
     - name: Build Docker Image
       run: |
-        docker build -t gil-project:latest .
+        docker build -t gil-project:latest -f back_Security_JWT/Dockerfile back_Security_JWT
 
     # 3. Docker 이미지 저장 (.tar 파일로 내보내기)
     - name: Save Docker Image
