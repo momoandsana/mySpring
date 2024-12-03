@@ -32,11 +32,12 @@ jobs:
         DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
         DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
       run: |
-        # echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" -p "{DOCKER_HUB_TOKEN}"
-        echo "${DOCKER_HUB_TOKEN}" | docker login -u mainecooncat -p dckr_pat_suy38qxXsqsFSQMFXkfn3sv-2ns
+        echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
     # 5. Docker 이미지 빌드 및 푸시
     - name: Build and Push Docker Image
+      env:
+        DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       run: |
         docker build -t ${DOCKER_HUB_USERNAME}/gil-project:latest .
         docker push ${DOCKER_HUB_USERNAME}/gil-project:latest
@@ -63,7 +64,7 @@ jobs:
           cd /home/${USER}
 
           # Docker Hub 로그인
-          echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" -p "{DOCKER_HUB_TOKEN}"
+          echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
           # 기존 컨테이너 종료
           docker-compose down || true
