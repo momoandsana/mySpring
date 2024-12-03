@@ -48,15 +48,15 @@ jobs:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         USER: ${{ secrets.EC2_USER }}
       run: |
+        set -e
+        trap 'rm -f key.pem' EXIT
+
         # PEM 키를 임시 파일로 저장
         echo "$PEM_KEY" > key.pem
         chmod 600 key.pem
 
         # SCP로 파일 전송
         scp -i key.pem -o StrictHostKeyChecking=no gil-project.tar ${USER}@${EC2_HOST}:/home/${USER}/gil-project.tar
-
-        # 임시 PEM 키 파일 삭제
-        rm -f key.pem
 
     # 8. EC2에서 Docker Compose 실행 및 기존 이미지 삭제
     - name: Deploy on EC2
@@ -65,6 +65,9 @@ jobs:
         EC2_HOST: ${{ secrets.EC2_HOST }}
         USER: ${{ secrets.EC2_USER }}
       run: |
+        set -e
+        trap 'rm -f key.pem' EXIT
+
         # PEM 키를 임시 파일로 저장
         echo "$PEM_KEY" > key.pem
         chmod 600 key.pem
@@ -88,6 +91,3 @@ jobs:
           # 불필요한 파일 삭제
           rm -f /home/${USER}/gil-project.tar
         EOF
-
-        # 임시 PEM 키 파일 삭제
-        rm -f key.pem
