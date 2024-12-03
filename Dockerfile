@@ -10,7 +10,7 @@ WORKDIR /app
 COPY target/gil-project.jar /app/gil-project.jar
 
 # 4. 포트 노출
-EXPOSE 8080
+EXPOSE 9000
 
 # 5. 실행 명령어
 CMD ["java", "-jar", "/app/gil-project.jar"]
