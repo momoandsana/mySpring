@@ -26,37 +26,28 @@ jobs:
       run: |
         mvn clean package -DskipTests
 
-    # 4. Docker 이미지 빌드
-    - name: Build Docker Image
-      run: |
-        docker build -t gil-project:latest .
-
-    # 5. Docker 이미지 저장 및 전송
-    - name: Transfer Docker Image to EC2
+    # 4. Docker Hub 로그인
+    - name: Login to Docker Hub
       env:
-        PEM_KEY: ${{ secrets.EC2_PEM_KEY }}
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-        USER: ${{ secrets.EC2_USER }}
+        DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
       run: |
-        set -e
-        trap 'rm -f key.pem' EXIT
+        echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
-        # PEM 키를 임시 파일로 저장
-        echo "$PEM_KEY" > key.pem
-        chmod 600 key.pem
+    # 5. Docker 이미지 빌드 및 푸시
+    - name: Build and Push Docker Image
+      run: |
+        docker build -t ${DOCKER_HUB_USERNAME}/gil-project:latest .
+        docker push ${DOCKER_HUB_USERNAME}/gil-project:latest
 
-        # Docker 이미지 저장 및 압축
-        docker save gil-project:latest | gzip > gil-project.tar.gz
-
-        # SCP로 파일 전송
-        scp -i key.pem -o StrictHostKeyChecking=no gil-project.tar.gz ${USER}@${EC2_HOST}:/home/${USER}/gil-project.tar.gz
-
-    # 6. EC2에서 Docker Compose 실행 및 기존 이미지 삭제
+    # 6. EC2에서 Docker Compose 실행
     - name: Deploy on EC2
       env:
         PEM_KEY: ${{ secrets.EC2_PEM_KEY }}
         EC2_HOST: ${{ secrets.EC2_HOST }}
         USER: ${{ secrets.EC2_USER }}
+        DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
       run: |
         set -e
         trap 'rm -f key.pem' EXIT
@@ -70,21 +61,18 @@ jobs:
           set -e
           cd /home/${USER}
 
-          # Docker 이미지 압축 해제
-          gunzip -f gil-project.tar.gz
+          # Docker Hub 로그인
+          echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
           # 기존 컨테이너 종료
           docker-compose down || true
 
           # 이전 Docker 이미지 삭제
-          docker images --filter=reference='gil-project*' --format "{{.ID}}" | xargs -r docker rmi -f || true
+          docker images --filter=reference='${DOCKER_HUB_USERNAME}/gil-project*' --format "{{.ID}}" | xargs -r docker rmi -f || true
 
-          # 새로운 Docker 이미지 로드
-          docker load -i gil-project.tar
+          # 최신 Docker 이미지 Pull
+          docker-compose pull
 
           # Docker Compose 실행
           docker-compose up -d --force-recreate
-
-          # 불필요한 파일 삭제
-          rm -f gil-project.tar gil-project.tar.gz
         EOF
