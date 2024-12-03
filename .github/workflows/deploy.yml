@@ -39,8 +39,8 @@ jobs:
       env:
         DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       run: |
-        docker build -t ${DOCKER_HUB_USERNAME}/gil-project:latest .
-        docker push ${DOCKER_HUB_USERNAME}/gil-project:latest
+        docker build -t ${DOCKER_HUB_USERNAME}/myspring:latest .
+        docker push ${DOCKER_HUB_USERNAME}/myspring:latest
 
     # 6. EC2에서 Docker Compose 실행
     - name: Deploy on EC2
@@ -67,14 +67,21 @@ jobs:
           echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
           # 기존 컨테이너 종료
-          docker-compose down || true
+          if [ -f docker-compose.yml ]; then
+            docker-compose down || true
+          fi
 
           # 이전 Docker 이미지 삭제
-          docker images --filter=reference='${DOCKER_HUB_USERNAME}/gil-project*' --format "{{.ID}}" | xargs -r docker rmi -f || true
+          docker images --filter=reference='${DOCKER_HUB_USERNAME}/myspring*' --format "{{.ID}}" | xargs -r docker rmi -f || true
 
           # 최신 Docker 이미지 Pull
-          docker-compose pull
+          docker pull ${DOCKER_HUB_USERNAME}/myspring:latest
 
           # Docker Compose 실행
-          docker-compose up -d --force-recreate
+          if [ -f docker-compose.yml ]; then
+            docker-compose up -d --force-recreate
+          else
+            echo "docker-compose.yml 파일이 없습니다. 작업이 중단됩니다."
+            exit 1
+          fi
         EOF
