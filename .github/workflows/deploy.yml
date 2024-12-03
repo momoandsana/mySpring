@@ -71,6 +71,9 @@ jobs:
             docker-compose down || true
           fi
 
+          # Docker Hub 재로그인
+          echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
+
           # 이전 Docker 이미지 삭제
           docker images --filter=reference='${DOCKER_HUB_USERNAME}/myspring*' --format "{{.ID}}" | xargs -r docker rmi -f || true
 
