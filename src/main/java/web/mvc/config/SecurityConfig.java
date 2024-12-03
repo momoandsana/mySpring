@@ -69,7 +69,7 @@ public class SecurityConfig {
                         return configuration;
                     }
                 })));
-        //////////////////////////
+        /////////////////////////
         //csrf disable
         http.csrf((auth) -> auth.disable()); //csrf공격을 방어하기 위한 토큰 주고 받는 부분을 비활성화!
 
