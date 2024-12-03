@@ -14,12 +14,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 2. Java 17 설치 (AdoptOpenJDK 사용)
+    # 2. Java 17 설치 (temurin 사용)
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
-        distribution: 'adoptopenjdk'  # AdoptOpenJDK로 수정
+        distribution: 'temurin'  # adoptopenjdk 대신 temurin 사용
 
     # 3. Maven 빌드 (pom.xml 파일이 프로젝트 루트에 있음)
     - name: Build JAR with Maven
