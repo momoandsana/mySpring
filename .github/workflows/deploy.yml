@@ -1,0 +1,60 @@
+name: Build and Deploy Docker Image to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. GitHub Actions가 저장소 체크아웃
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # 2. Docker 이미지 빌드
+    - name: Build Docker Image
+      run: |
+        docker build -t gil-project:latest -f back_Security_JWT/Dockerfile back_Security_JWT
+
+    # 3. Docker 이미지 저장 (.tar 파일로 내보내기)
+    - name: Save Docker Image
+      run: |
+        docker save gil-project:latest -o gil-project.tar
+
+    # 4. EC2에 Docker 이미지 전송
+    - name: Transfer Docker Image to EC2
+      env:
+        PEM_KEY: ${{ secrets.EC2_PEM_KEY }}
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        USER: ${{ secrets.EC2_USER }}
+      run: |
+        scp -i <(echo "$PEM_KEY") -o StrictHostKeyChecking=no gil-project.tar ${USER}@${EC2_HOST}:/home/${USER}/gil-project.tar
+
+    # 5. EC2에서 Docker Compose 실행 및 기존 이미지 삭제
+    - name: Deploy on EC2
+      env:
+        PEM_KEY: ${{ secrets.EC2_PEM_KEY }}
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        USER: ${{ secrets.EC2_USER }}
+      run: |
+        ssh -o StrictHostKeyChecking=no -i <(echo "$PEM_KEY") ${USER}@${EC2_HOST} << EOF
+          cd /home/${USER}
+
+          # 기존 컨테이너 종료
+          docker-compose down || true
+
+          # 이전 Docker 이미지 삭제
+          docker images --filter=reference='gil-project*' --format "{{.ID}}" | xargs -r docker rmi -f || true
+
+          # 새로운 Docker 이미지 로드
+          docker load -i gil-project.tar
+
+          # Docker Compose 실행
+          docker-compose up -d
+
+          # 불필요한 파일 삭제
+          rm -f gil-project.tar
+        EOF
