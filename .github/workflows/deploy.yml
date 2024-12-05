@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. GitHub Actions가 저장소 체크아웃
+    # 1. GitHub Actions가 저장소 체크아웃->여기부터 GiHub 서버 안에서 돌아가는 코드드
     - name: Checkout code
       uses: actions/checkout@v3
 
@@ -34,7 +34,7 @@ jobs:
       run: |
         echo "${DOCKER_HUB_TOKEN}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin
 
-    # 5. Docker 이미지 빌드 및 푸시
+    # 5. Docker 이미지 빌드 및 푸시->여기까지가 GitHub 서버 안에서 돌아가는 코드
     - name: Build and Push Docker Image
       env:
         DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
@@ -42,7 +42,7 @@ jobs:
         docker build -t ${DOCKER_HUB_USERNAME}/myspring:latest .
         docker push ${DOCKER_HUB_USERNAME}/myspring:latest
 
-    # 6. EC2에서 Docker Compose 실행
+    # 6. EC2에서 Docker Compose 실행->여기부터 ec2에 접속해서 돌아가는 코드드
     - name: Deploy on EC2
       env:
         PEM_KEY: ${{ secrets.EC2_PEM_KEY }}
